@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.work.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,6 +15,7 @@ class MainActivity : AppCompatActivity() {
 
         val btnOTR = findViewById<Button>(R.id.btnOneTimeRequest)
         val tvOTR = findViewById<TextView>(R.id.tvOneTimeRequest)
+        val btnPeriodicReq = findViewById<Button>(R.id.btnPeriodicReq)
 
         btnOTR.setOnClickListener{
 //            WorkManager doesn't have any constraints by default
@@ -76,6 +78,24 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
+        }
+
+        btnPeriodicReq.setOnClickListener{
+            val pdrConstraints = Constraints.Builder()
+                .setRequiresCharging(false) // Checks whether phone is charging or not
+                .setRequiredNetworkType(NetworkType.CONNECTED) // Checks whether phone is connected to internet or not
+                .setRequiresBatteryNotLow(true)
+                .build()
+
+            val periodicWorkRequest = PeriodicWorkRequest.Builder(PeriodicRequestWorker::class.java, 15, TimeUnit.MINUTES) // In every 15 minutes, this will be executed
+                .setConstraints(pdrConstraints)
+                .build()
+
+            WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "Periodic Work Request",
+                ExistingPeriodicWorkPolicy.KEEP,
+                periodicWorkRequest
+            )
         }
     }
 }
